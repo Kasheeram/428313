@@ -169,6 +169,7 @@ class ViewController: UIViewController {
         cv.dataSource = self
         cv.delegate = self
         cv.backgroundColor = .white
+        cv.bounces = false
         cv.isPagingEnabled = true
         return cv
     }()
@@ -266,8 +267,15 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+
+        
         view.backgroundColor = .white
         
+        collectionView.alwaysBounceVertical = false
         collectionView.register(FatherInfoCell.self, forCellWithReuseIdentifier: fatherCellId)
         collectionView.register(MotherInfoCell.self, forCellWithReuseIdentifier: motherCellId)
         collectionView.register(GuardianInfoCell.self, forCellWithReuseIdentifier: guardianCellId)
@@ -278,6 +286,35 @@ class ViewController: UIViewController {
         setupViews()
         //        setupparentHorizontalBarView()
     }
+    
+    var yOriginOfCurrentlySelectedTextField: CGFloat = 0
+    
+    @objc func keyboardWillShow(notification: NSNotification) {
+        if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+
+            if yOriginOfCurrentlySelectedTextField > keyboardSize.origin.y {
+                yOriginOfCurrentlySelectedTextField = yOriginOfCurrentlySelectedTextField - keyboardSize.origin.y 
+                self.scrollView.setContentOffset(.init(x: 0, y: yOriginOfCurrentlySelectedTextField), animated: true)
+            }
+            
+        }
+    }
+    
+    @objc func keyboardWillHide(notification: NSNotification) {
+
+        if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue {
+            
+            if yOriginOfCurrentlySelectedTextField < keyboardSize.origin.y {
+                yOriginOfCurrentlySelectedTextField = self.scrollView.contentOffset.y - yOriginOfCurrentlySelectedTextField
+                self.scrollView.setContentOffset(.init(x: 0, y: yOriginOfCurrentlySelectedTextField > 0 ? yOriginOfCurrentlySelectedTextField : 0), animated: true)
+            }
+            
+        }
+        
+        
+    }
+    
+    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -315,10 +352,10 @@ class ViewController: UIViewController {
         
         if #available(iOS 11.0, *) {
             headerLabel.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, size: .init(width: 0, height: 50))
-            scrollView.anchor(top: headerLabel.bottomAnchor, leading: headerLabel.leadingAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, trailing: nil,padding: .init(top: 0, left: 0, bottom: 0, right: 0), size: .init(width: view.frame.width, height: 0))
+            scrollView.anchor(top: headerLabel.bottomAnchor, leading: headerLabel.leadingAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, trailing: nil, size: .init(width: view.frame.width, height: 0))
         } else {
             headerLabel.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, size: .init(width: 0, height: 50))
-            scrollView.anchor(top: headerLabel.bottomAnchor, leading: headerLabel.leadingAnchor, bottom: view.bottomAnchor, trailing: nil,padding: .init(top: 0, left: 0, bottom: 0, right: 0), size: .init(width: view.frame.width, height: 0))
+            scrollView.anchor(top: headerLabel.bottomAnchor, leading: headerLabel.leadingAnchor, bottom: view.bottomAnchor, trailing: nil, size: .init(width: view.frame.width, height: 0))
         }
         
         contentView.anchor(top: scrollView.topAnchor, leading: scrollView.leadingAnchor, bottom: scrollView.bottomAnchor, trailing: scrollView.trailingAnchor, size: .init(width: view.frame.width, height: 0))
@@ -538,6 +575,15 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
 extension ViewController: UITextFieldDelegate {
     
     //MARK:- Text Field delegate
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+//        guard let window = UIApplication.shared.windows.first else { return }
+        let rectInScrollView = textField.convert(textField.frame, to: self.view)
+//        let textFieldRectInView = textField.convert(rectInScrollView, to: self.view)
+        let yOrigin = rectInScrollView.origin.y + rectInScrollView.size.height
+        self.yOriginOfCurrentlySelectedTextField = yOrigin
+    }
+    
     func textFieldDidEndEditing(_ textField: UITextField) {
         if textField.tag == 101 {
             fatherDetails["name"] = textField.text

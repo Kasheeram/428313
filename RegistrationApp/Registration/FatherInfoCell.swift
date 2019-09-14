@@ -79,6 +79,33 @@ class FatherInfoCell: CollectionBaseCell {
     override func setupViews() {
         super.setupViews()
         setupUI()
+        setupToolBar()
+    }
+    
+    func setupToolBar() {
+        let numberToolbar = UIToolbar(frame:CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        numberToolbar.barStyle = .default
+        numberToolbar.items = [
+            UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelNumberPad)),
+            UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
+            UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneWithNumberPad))]
+        numberToolbar.sizeToFit()
+        fatherNameTextFiled.inputAccessoryView = numberToolbar
+        occupationTextFiled.inputAccessoryView = numberToolbar
+        emailTextFiled.inputAccessoryView = numberToolbar
+        countryCodeTextFiled.inputAccessoryView = numberToolbar
+        phoneTextFiled.inputAccessoryView = numberToolbar
+        addressTextFiled.inputAccessoryView = numberToolbar
+        cityTextFiled.inputAccessoryView = numberToolbar
+        pinTextFiled.inputAccessoryView = numberToolbar
+    }
+    
+    @objc func cancelNumberPad() {
+        //Cancel with number pad
+    }
+    @objc func doneWithNumberPad() {
+        //Done with number pad
+        self.endEditing(true)
     }
     
     func setupUI(){
